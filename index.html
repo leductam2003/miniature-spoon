@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!-- saved from url=(0050)https://twitter-suppeded-checker.leductam.repl.co/ -->
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Check reply tweet!!</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script type="text/javascript">
+    function filterLinks() {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const text = document.getElementById('tweet_links').value
+      const urls = text.match(urlRegex);
+      let tweets = []
+      if (urls) {
+        urls.forEach((url) => {
+          tweets.push(url)
+        });
+      } else {
+        console.log("No URLs found in the text.");
+      }
+      document.getElementById('tweet_links').value = tweets.join('\n')
+      document.getElementById('total-tweets').innerHTML = `Total: ${tweets.length}`
+    }
+    function eraseTextArea() {
+      document.getElementById('tweet_links').value = ''
+      document.getElementById('your_tweet_link').value = ''
+      document.getElementById('total-tweets').innerHTML = `Total: ...`
+      document.getElementById('already_reply').value = ``
+      document.getElementById('not_reply').value = ``
+      document.getElementById('total-not-reply').innerHTML = `Total: ...`
+      document.getElementById('total-reply').innerHTML = `Total: ...`
+    }
+
+    async function startCheck() {
+      document.getElementById('bot-status').innerHTML = `Checking...`
+      document.getElementById('already_reply').value = ``
+      document.getElementById('not_reply').value = ``
+      document.getElementById('total-not-reply').innerHTML = `Total: ...`
+      document.getElementById('total-reply').innerHTML = `Total: ...`
+      const interacts = document.getElementById('tweet_links').value.trim().split('\n');
+      const tweetID = document.getElementById('your_tweet_link').value.trim().match(/[0-9]{19}/)[0]
+      console.log(window.location.host)
+      const host = window.location.protocol + "//" + window.location.host
+      const total_username_reply = (await axios.get(host + '/twitter_details?tweetID=' + tweetID)).data.usernames.map(e => { return e.toLowerCase() })
+      console.log(total_username_reply.join(','))
+      let user_reply = []
+      let user_not_reply = []
+      for (const i of interacts) {
+        const regex = /(?:twitter\.com|x\.com)\/([A-Za-z0-9_]+)/;
+        const match = i.match(regex);
+        const username = match[1].toLowerCase();
+        if (total_username_reply.includes(username)) {
+          console.log(`user: ${username} already interact`)
+          updateTextarea('already_reply', username)
+          user_reply.push(username)
+        } else {
+          updateTextarea('not_reply', username)
+          console.log(`user: ${username} not interact`)
+          user_not_reply.push(username)
+        }
+      }
+      const total = document.getElementById('total-tweets').innerHTML.match(/\d+/)[0]
+      document.getElementById('total-reply').innerHTML = `Total: ${user_reply.length}/${total} | ${(user_reply.length / total * 100).toFixed(2)}%`
+      document.getElementById('total-not-reply').innerHTML = `Total: ${user_not_reply.length}/${total} | ${(user_not_reply.length / total * 100).toFixed(2)}%`
+      document.getElementById('bot-status').innerHTML = `...`
+    }
+
+    function updateTextarea(textAreaId, message) {
+      var textarea = document.getElementById(textAreaId);
+      var oldContent = textarea.value;
+      if (oldContent !== "") {
+        message = '\n' + message;
+      }
+      var updatedContent = oldContent + message;
+      textarea.value = updatedContent;
+    }
+  </script>
+  <style>
+    .block:not(:last-child) {
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+
+<body>
+  <section class="section">
+    <div class="box">
+      <p class="bd-notification is-primary">Your Link:</p>
+      <input id="your_tweet_link" class="input"
+        placeholder="https://twitter.com/leductam2003/status/1715771579349758434"></textarea>
+    </div>
+    <div class="box">
+      <div id="total-tweets">Total: ...</div>
+      <p class="bd-notification is-primary">Tweet Links:</p>
+      <textarea id="tweet_links" class="textarea"
+        placeholder="https://twitter.com/leductam2003/status/1715771579349758434"></textarea>
+      <br /><button id="check" onclick="filterLinks()" class="button is-normal">Filter</button>
+    </div>
+    <div class="box">
+      <div class="columns is-vcentered">
+        <div class="column">
+          <div id="total-reply">Total: ...</div>
+          <p class="bd-notification is-primary">Already Reply:</p>
+          <textarea id="already_reply" class="textarea is-success"
+            placeholder="usernames that has already replied to your tweet." readonly></textarea>
+        </div>
+
+        <div class="column">
+          <div id="total-not-reply">Total: ...</div>
+          <p class="bd-notification is-primary">Not Reply:</p>
+          <textarea id="not_reply" class="textarea is-danger" placeholder="usernames that do not reply to your tweet."
+            readonly></textarea>
+        </div>
+      </div>
+    </div>
+
+    <button id="check" onclick="startCheck()" class="button is-normal">Check</button>
+
+    <button id="clear" onclick="eraseTextArea()" class="button is-normal">Clear</button>
+    <div class="box">
+      <div id="bot-status" class="message-body">...
+      </div>
+    </div>
+    <br>
+    <p class="subtitle">
+      Check reply tweet <strong> - leductam</strong> - <a href="https://t.me/leductam2003">Telegram</a> - <a
+        href="https://twitter.com/leductam2003">Twitter</a>
+    </p>
+
+  </section>
+
+</body>
+
+</html>
